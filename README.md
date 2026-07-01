@@ -42,6 +42,10 @@ Servicios por defecto:
 - Swagger: `http://localhost:4000/docs`
 - PostgreSQL: `localhost:5432`
 
+## Vercel
+
+Configure the Vercel project with Root Directory set to `apps/web`. The web app owns its Vercel config in `apps/web/vercel.json` and installs/builds from the monorepo root so workspace dependencies resolve correctly.
+
 ## Docker Compose
 
 ```bash
