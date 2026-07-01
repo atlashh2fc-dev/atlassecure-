@@ -1,0 +1,34 @@
+{
+  "name": "atlas360-secure",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Atlas360 Secure SaaS cybersecurity platform monorepo.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @atlas360/web",
+    "dev:api": "npm run start:dev --workspace @atlas360/api",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,css}": [
+      "prettier --write"
+    ]
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  CLIENT_ADMIN
+  ANALYST
+  READ_ONLY
+}
+
+enum Severity {
+  critical
+  high
+  medium
+  low
+  informational
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  plan        String   @default("managed-security")
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  memberships Membership[]
+  assets      Asset[]
+  alerts      Alert[]
+  incidents   Incident[]
+  integrations IntegrationConnection[]
+  reports     Report[]
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  mfaEnabled    Boolean   @default(false)
+  riskScore     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  memberships   Membership[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           Role
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId, role])
+}
+
+model Asset {
+  id             String       @id @default(cuid())
+  organizationId String
+  hostname       String
+  owner          String
+  os             String
+  exposure       String
+  agentStatus    String
+  lastSeenAt     DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, agentStatus])
+}
+
+model Alert {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  severity       Severity
+  source         String
+  status         String
+  assetName      String
+  detectedAt     DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, severity, status])
+}
+
+model Vulnerability {
+  id             String   @id @default(cuid())
+  organizationId String
+  cve            String
+  title          String
+  severity       Severity
+  cvss           Float
+  affectedAssets Int
+  status         String
+  discoveredAt   DateTime
+
+  @@index([organizationId, severity, status])
+}
+
+model Incident {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  severity       Severity
+  assignee       String
+  status         String
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, severity, status])
+}
+
+model IntegrationConnection {
+  id             String       @id @default(cuid())
+  organizationId String
+  type           String
+  displayName    String
+  status         String
+  encryptedConfig Json
+  lastSyncAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, type])
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  organizationId String
+  title          String
+  period         String
+  status         String
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
